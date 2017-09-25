@@ -210,13 +210,18 @@ Marker input_info(){
 int main()
 {
     //Marker a(13, 10.5, 11.2, 12);
-    Marker a = input_info();
+    //Вызов конструктора по умолчанию
+    Marker a();
+    a.show();
+    //Вызов функции записи и конструктора
+    a = input_info();
     a.show();
     cout<<endl;
+    //Вызов копии маркера а
     cout<<"Copy of a in b:"<<endl;
     Marker b(a);
     b.show();
-
+    //Вызов метода получения и демонстрации трека
     cout<<endl;
     cout<<"Track of b:"<<endl;
     b.show_track(b.get_track());
