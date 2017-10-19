@@ -11,37 +11,40 @@ MarkerArray::MarkerArray()
 MarkerArray::MarkerArray(unsigned int elementsCount)
 {
     _elementsCount = elementsCount;
-    _base = (Marker*)malloc(_elementsCount*sizeof(Marker));
+    _base = new Marker[elementsCount];
 }
 
 Marker MarkerArray::at(unsigned int position)
 {
-    return *(_base + sizeof(Marker)*position);
+    return _base[position];
 }
 
 void MarkerArray::setValue(unsigned int position, Marker value)
 {
-    *(_base + sizeof(Marker)*position) = value;
+    _base[position] = value;
 }
 
 void MarkerArray::resize(unsigned int size)
 {
-    _base = (Marker*)realloc(_base, size * sizeof(Marker));
+    Marker* _old_base = _base;
+    _base = new Marker[size];
+    for (int i = 0; i < size - 1; i++)
+        _base[i] = _old_base[i];
     _elementsCount = size;
 }
 void MarkerArray::remove(unsigned int position)
 {
-    for (int i = position - 1; i < _elementsCount - 1; i++)
-        _base[i] = _base[i + 1];
-
-    _elementsCount -= 1;
-    _base = (Marker*)realloc(_base, _elementsCount * sizeof(Marker));
+    std::copy(_base + position,
+              _base + _elementsCount - 1,
+              _base + position - 1);
+    _elementsCount--;
 }
 
 void MarkerArray::append(Marker value)
 {
     resize(_elementsCount + 1);
-    _base[_elementsCount - 2] = value;
+    std::cout << "Adding Value" << std::endl;
+    _base[_elementsCount - 1] = value;
 }
 
 bool MarkerArray::isEmpty()
@@ -52,32 +55,34 @@ bool MarkerArray::isEmpty()
 void MarkerArray::getArray(string filepath)
 {
     ifstream inputFile;
+    _elementsCount = 0;
     inputFile.open(filepath, std::ios::in);
-    inputFile >> _elementsCount;
-    resize(_elementsCount);
-    std::cout << "AMIGO " << _elementsCount << std::endl;
-    for (int i = 0; i < _elementsCount; i++)
+    //inputFile >> _elementsCount;
+    //resize(_elementsCount);
+    while (true)
     {
         int id;
         int trackSize;
         inputFile >> id >> trackSize;
-        std::cout << id << " " << trackSize << std::endl;
-
+        if (inputFile.eof())
+            break;
         vector<Position> track;
         for (int i = 0; i < trackSize; i++)
         {
             int x,y,z, time;
-            inputFile >> x >> y >> z >> time;
-            std::cout << x << " " << y << " " << z << " " << time << "\n";
+            bool vis;
+            inputFile >> x >> y >> z >> time;// >> vis;
 
             Position p;
             p.x = x;
             p.y = y;
             p.z = z;
             p.time = time;
+            //p.vis = vis;
             track.push_back(p);
         }
-        setValue(i, Marker(id, track));
+        //std::cout << "Here with " << track[0].x << " " << track[0].y << " " << track[0].z << std::endl;
+        append(Marker(id, track[0].x, track[0].y, track[0].z, track[0].time));
     }
 }
 
@@ -85,15 +90,17 @@ void MarkerArray::toFile(string filepath)
 {
     ofstream outFile;
     outFile.open(filepath, std::ios::out);
-    outFile << _elementsCount << " ";
+    //outFile << _elementsCount << " ";
     for (int i = 0; i < _elementsCount; i++)
     {
         outFile << at(i).get_id() << " ";
         outFile << at(i).get_track().size() << " ";
         for (int j = 0; j < at(i).get_track().size(); j++)
             outFile << at(i).get_track()[j].x << " " << at(i).get_track()[j].y << " "
-                    << at(i).get_track()[j].z << " " << at(i).get_track()[j].time << " ";
+                    << at(i).get_track()[j].z << " " << at(i).get_track()[j].time<<" ";
+                    //<< " " << at(i).get_track()[j].vis << " ";
     }
+
 }
 
 unsigned int MarkerArray::size()
